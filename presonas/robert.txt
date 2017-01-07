@@ -1,0 +1,18 @@
+Hi im robert!
+
+i build this framework, where every page is loaded by ajax
+the problem is, when a user clicks another link he will loose his work
+so i need a plugin that stops ajax requests and asks
+if a user has changed form data
+
+so i need
+$('form').protect_data('ajax'=>true)
+
+and i want to make requests, that dont change the 
+formdata, so i have to deactivate it too
+
+buttonClick(){
+  $.protect_data.unprotect(2);
+  load();
+  load();
+}

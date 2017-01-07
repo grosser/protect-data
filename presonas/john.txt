@@ -1,0 +1,9 @@
+Hi im john!
+i need a plugin that prevents my users from
+loosing their formdata when leaving the page
+or clicking another link
+
+atm i always have to $(other-links).click "data is not saved"
+thats rediculus...
+
+just $('form').protect_data() for me plz

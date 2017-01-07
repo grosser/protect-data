@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Testing jquery.protect-data</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	
+  <script src="../assets/jquery.js" type="text/javascript"></script>
+  <script src="../assets/jquery.form.js" type="text/javascript"></script>
+  <script src="../assets/jsunittest.js" type="text/javascript"></script>
+  <script src="../assets/dump.js" type="text/javascript"></script>
+  .
+  <script src="../../dist/jquery.protect-data.pack.js" type="text/javascript"></script>
+  
+  <link rel="stylesheet" href="../assets/unittest.css" type="text/css" />
+</head>
+<body>
+
+<div id="content">
+  <div id="header">
+    <h1>Testing jquery.protect-data</h1>
+		<a href="../demo/demo.html">view Demo 1</a>
+		<a href="../demo/demo_ajax.html">view Demo 2 (Ajax)</a>
+  </div>
+
+  <!-- Log output (one per Runner, via {testLog: "testlog"} option)-->
+  <div id="testlog"></div>
+  
+  <!-- Put sample/test html here -->
+  <div id="sample">
+    <form style="display:none" action="../fixtures/fail.html">
+      <input type="text" value="change_me"/>
+			<input type="submit"/>
+    </form>
+  </div>
+</div>
+
+<script type="text/javascript">
+// <![CDATA[
+var x = function($){//jQuery encapsulation
+	var helper = {
+		assertProtected:function(test){
+			test.assert($.protectData.unsavedChanges);
+      test.assert(typeof(window.onbeforeunload)=='function');
+		},
+		
+		assertUnprotected:function(test){
+			test.assert(!$.protectData.unsavedChanges);
+      test.assertNull(window.onbeforeunload);
+		},
+		
+		protectForm:function(options){
+			$.extend($.protectData,options||{});
+      $('form').protectData();
+    },
+    
+    changeForm:function(){
+			if($.browser.msie){
+	      $('form input[@type=text]').trigger('change');
+			} else {
+	      $('form').trigger('change');//triggering on input does not work
+			}
+    },
+		
+		changedForm:function(options){
+			this.protectForm(options);
+      this.changeForm();
+		},
+		
+		//does not work as expected, blocks all other activity
+		sleep:function(time_in_s){
+			wait_until = new Date().getTime() + time_in_s;
+			while (true) { if(new Date().getTime() > wait_until)break;	}
+		}
+	};
+	
+  new Test.Unit.Runner({
+		setup:function(){
+      $.protectData.reset();
+      $('form').unbind('submit');
+			$.protectData.message = '------FAIL-----(hit ESC)';
+		},
+		
+		teardown:function(){
+			window.onbeforeunload=null;//so we can reload without warnings
+		},
+		
+    testShouldProtectSimple: function() {
+      helper.protectForm();
+			
+      this.assert($.protectData.unsavedChanges==false);
+      this.assert($.protectData.forms.length==1);
+			
+      helper.changeForm();
+      
+      helper.assertProtected(this);
+      this.assert(window.onbeforeunload().length > 10);
+    },
+		
+    testDefaultsRestored: function() {
+			helper.assertUnprotected(this);
+	  },
+    
+    testShouldNotStopSubmit: function() {
+			helper.changedForm();
+      
+			var test = this;
+			//a submit after the onsubmit placed by protectData
+      $('form').submit(function(){
+				test.assert(typeof(window.onbeforeunload)!='function');
+				return false;
+			});
+      
+			$('form').submit();
+			helper.assertUnprotected(this);
+    },
+    
+    testEventsUnbound:function(){
+      helper.protectForm();
+      var self = this;
+      $('form').bind('change.protectData',function(){
+        self.assert(false);
+      });
+      $.protectData.reset();
+      $('form').change();
+      $('form input').change();
+    },
+		
+		testShouldNotStopAjax: function(){
+			helper.changedForm();
+
+			$.get('../fixtures/pass.txt');//shows fail if request was stopped
+			this.assert(true);
+			helper.assertProtected(this);
+		},
+  
+    testShouldStopAjax:function(){
+			helper.changedForm({protectAjax:true});
+			
+			//make a ajax request and see if it was stopped
+			$.protectData.message = 'ESC';
+			var stopped=false;
+
+			$().ajaxSend(function(e,request,set){
+				stopped=(request.readyState == 0);
+			});
+			$.get('../fixtures/fail.txt');
+			
+			this.assert(stopped)
+			helper.assertProtected(this);
+		},
+			 
+    testShouldUnprotectAfterAjaxWithOK:function(){
+			helper.changedForm({protectAjax:true});
+			
+			var state=0;
+			$.protectData.message="ENTER"
+			$().ajaxSend(function(e,request,set){
+				state=(request.readyState == 0)?1:2;
+			});
+			$.get('../fixtures/pass.txt');
+			
+			this.assertEqual(2,state);
+			helper.assertUnprotected(this);
+		},
+		
+    testShouldUnprotectRequest:function(){
+      helper.changedForm({protectAjax:true});
+      
+      var successfulRequests=0;
+      $().ajaxSend(function(e,request,set){
+        if(request.readyState==1)successfulRequests++;
+        if(successfulRequests==1)$.protectData.message="ESC"
+      });
+      
+      //nothing => 1
+      $.protectData.unprotectAjax();
+      $.get('../fixtures/pass.txt');
+      
+      //0 stays 0...
+      $.protectData.unprotectAjax(0);
+      $.get('../fixtures/fail.txt');
+      
+      this.assertEqual(1,successfulRequests);
+      helper.assertProtected(this);
+    },
+    
+    testShouldUnprotectNRequests:function(){
+			helper.changedForm({protectAjax:true});
+			
+			var successfulRequests=0;
+			$().ajaxSend(function(e,request,set){
+				if(request.readyState==1)successfulRequests++;
+				if(successfulRequests==2)$.protectData.message="ESC"
+			});
+			
+			$.protectData.unprotectAjax(2);
+			$.get('../fixtures/pass.txt');
+			$.get('../fixtures/pass.txt');
+			$.get('../fixtures/fail.txt');
+			
+			this.assertEqual(2,successfulRequests);
+			helper.assertProtected(this);
+	  },
+    
+    testShouldCallStateCallback: function(){
+      var state = 0;
+      var count = 0;
+      helper.protectForm({stateChangeCallback:function(isProtectd){
+        state=isProtectd?'protected':'unprotected';
+        count++;
+      }});
+      
+      //no double callbacks and right state transitions
+      helper.changeForm();
+      this.assertEqual('protected',state);
+      helper.assertProtected(this);
+      helper.changeForm();
+      this.assertEqual(1,count);
+      
+      $('form').ajaxSubmit();
+      this.assertEqual('unprotected',state);
+      helper.assertUnprotected(this);
+      $('form').ajaxSubmit();
+      this.assertEqual(2,count);
+    },
+		
+		testAjaxForm:function(){
+			helper.changedForm();
+			$('form').ajaxForm();
+			helper.assertProtected(this);
+			
+			$('form').submit();
+			helper.assertUnprotected(this);
+		}		
+	}, {testLog: "testlog"}); 
+}(jQuery);
+//]>
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>jquery.protect-data Demo 1</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	
+  <script src="../assets/jquery.js" type="text/javascript"></script>
+	<!-- needed for ajaxSubmit -->
+  <script src="../assets/jquery.form.js" type="text/javascript"></script>
+  <script src="../../src/jquery.protect-data.js" type="text/javascript"></script>
+	<script>
+		jQuery(function($){
+      $('form').protectData();
+      //toggle display of messages
+      $.protectData.stateChangeCallback=function(isProtected){//dont use protected as local var ;)
+        if (isProtected) {
+          $('#protected').hide('fast');
+          $('#unprotected').show('fast');
+        } else {
+          $('#protected').show('fast');
+          $('#unprotected').hide('fast');
+        }
+      };
+      
+			$('form').submit(function(){
+				alert('data sumbitted');
+			});
+			
+			$('#unlocker').click(function(){
+				$.protectData.unprotect();
+			});
+			$('#locker').click(function(){
+				$.protectData.protect();
+			});
+      $('#ajaxsubmit').click(function(){
+        $('form').ajaxSubmit();
+        alert('data send with ajax');
+      })
+		});
+	</script>
+</head>
+<body>
+	<div id="content">
+	  <div id="header">
+	    <h1>jquery.protect-data Demo 1</h1>
+			<a href="../unit/basic_test.html">run basic unit test</a>
+			<a href="../demo/demo_ajax.html">view Demo 2 (Ajax)</a>
+	  </div>
+		<br/>
+		<div id="control">
+			<a href="">reload</a>
+			<a id="locker" href="#">protect</a>
+			<a id="unlocker" href="#">unprotect</a>
+		</div>
+    
+    <!-- toggle -->
+    <div id="toggle">
+      <div id="protected" style="background:lime">
+        all changes saved
+      </div>
+      <div id="unprotected" style="background:maroon;color:white;display:none">
+        unsaved changes
+      </div>
+    </div>
+    
+    <!-- test form -->
+		<div id="examples">
+	    <form action="" id="form1">
+	    	<fieldset>
+	    		<legend>and the demomaker said "bring me one of each kind"</legend>
+		    	<p>
+		    		try leaving the page after changing this form<br/>
+						or submit it
+		    	</p>
+					<div class="row">
+			      <input type="text" value="change me"/>
+				  </div>
+					<div class="row">
+			      <input type="checkbox" value="change me"/>
+				  </div>
+					<div class="row">
+			      <input type="radio" value="change me"/>
+				  </div>
+					<div class="row">
+						<textarea></textarea>
+				  </div>
+					<div class="row">
+						<select>
+							<option>1</option>
+							<option>2</option>
+							<option>3</option>
+					  </select>				
+				  </div>
+	    	</fieldset>
+				
+				<fieldset class="action">
+				  <input type="submit"/>
+				  <input id="ajaxsubmit" type="button" value="ajaxSubmit"/>
+	    	</fieldset>
+	    </form>
+		</div>
+	</div>
+</body>
+</html>

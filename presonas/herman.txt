@@ -1,0 +1,6 @@
+Hallo,
+im Herman i want to benutzen plugin
+but my users all no speak english
+so i need to change all texte to deutsch
+
+$('form').protect_data(message='Wollen sie das ?')

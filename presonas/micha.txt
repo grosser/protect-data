@@ -1,0 +1,14 @@
+Hi im Micha
+im building a email application, and when the from was
+submitted via ajax, i want the user to see a small
+"data is save" tag to appear and to disable the submit button
+until the users changes something again
+
+And if the user edits a form i also want to highlite a small
+you have unsaved changes box
+
+this functionality should go into a callback
+
+$('form').protectData({stateChangeCallback:function(isProtected){
+  if(isProtected)alert("relax your save");
+}})

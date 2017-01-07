@@ -1,0 +1,12 @@
+Hi im David
+i wrote this great desing book, where i tell ppl
+that pressing save is bad, just let the user
+handel all input like it where a real notepad
+so i want all my forms to save when the
+user somehow leaves the page
+
+$('form').protect_data(autoSubmit=true) 
+is what i want..
+
+and for my next ajax project i need
+$('form').protect_data(autoSubmit=true, ajax=true) 

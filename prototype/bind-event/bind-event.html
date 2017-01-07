@@ -1,0 +1,14 @@
+<script src="jquery.js"></script>
+
+<script>
+//window.onbeforeunload = function(){alert(1)}
+$(function(){
+  $(window).bind("beforeunload", function(){
+    alert(1);
+    return 'yes';
+    //does not work yet...
+  });
+})
+</script>
+
+<a href="">reload</a>
